@@ -20,9 +20,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.awvs.presentation.feature.auth.SignInScreen
-import com.example.awvs.presentation.feature.auth.SignInViewModel
-import com.example.awvs.presentation.feature.profile.ProfileScreen
+import com.example.awvs_app.presentation.feature.auth.SignInScreen
+import com.example.awvs_app.presentation.feature.auth.SignInViewModel
+import com.example.awvs_app.presentation.feature.profile.ProfileScreen
 import com.example.awvs_app.ui.theme.AWVS_AppTheme
 import com.example.data.repository.sign_in.GoogleAuthUiClient
 import com.google.android.gms.auth.api.identity.Identity

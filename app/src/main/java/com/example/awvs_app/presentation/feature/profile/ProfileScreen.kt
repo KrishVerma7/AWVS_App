@@ -1,4 +1,4 @@
-package com.example.awvs.presentation.feature.profile
+package com.example.awvs_app.presentation.feature.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape

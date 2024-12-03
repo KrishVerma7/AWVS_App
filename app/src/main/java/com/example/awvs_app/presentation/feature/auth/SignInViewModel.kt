@@ -1,4 +1,4 @@
-package com.example.awvs.presentation.feature.auth
+package com.example.awvs_app.presentation.feature.auth
 
 import androidx.lifecycle.ViewModel
 import com.example.models.SignInResult
