@@ -49,6 +49,21 @@ dependencies {
 
     implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
+    implementation (libs.play.services.auth.v2100)
+
+    //credential manager
+//    implementation(libs.androidx.credentials)
+//    implementation ("androidx.credentials:credentials-play-services-auth:1.1.0-alpha02")
+    implementation ("androidx.credentials:credentials:1.2.0")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.2.0")
+
+
+//    implementation (libs.androidx.credentials.play.services.auth)
+
+    implementation ("com.google.code.gson:gson:2.10.1")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -1,4 +1,4 @@
-package com.example.awvs_app.presentation.feature.home
+﻿package com.example.awvs_app.presentation.feature.home
 
 import android.app.Activity
 import android.widget.Toast
@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +30,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,18 +55,28 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.awvs_app.R
+import com.example.awvs_app.ScanResultsViewModel
+import com.example.awvs_app.ui.theme.AWVS_AppTheme
+import com.example.data.repository.sign_in.RetrofitClient
+import com.example.models.ScanResults
 import kotlinx.coroutines.delay
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
-    val activity = LocalContext.current as? Activity
+fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsViewModel) {
+    val activity = LocalContext.current as? Activity ?: return
+    val apiService = RetrofitClient.apiService
 
     BackHandler {
         activity?.finish()
     }
 
-    var url by remember { mutableStateOf("") }
+    var targetUrl by remember { mutableStateOf("") }
+    var serverIp by remember { mutableStateOf("") }
     var optionsState = remember {
         mutableStateOf(
             listOf(
@@ -77,16 +90,20 @@ fun HomeScreen(navController: NavController) {
         )
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Background Image
+//    var scanResults by remember { mutableStateOf<ScanResults?>(null) }
+//    var isLoading by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf<String?>(null) }
+//    val scanResults by scanResultsViewModel.scanResults
+
+    val scanResults by scanResultsViewModel.scanResults
+    val isLoading by scanResultsViewModel.isLoading
+    val errorMessage by scanResultsViewModel.errorMessage
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.auth),
             contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.2f),
+            modifier = Modifier.fillMaxSize().alpha(0.2f),
             contentScale = ContentScale.Crop
         )
 
@@ -115,46 +132,23 @@ fun HomeScreen(navController: NavController) {
                     contentDescription = null,
                     modifier = Modifier
                         .size(32.dp)
-                        .clickable(onClick = {
-                            navController.navigate("profile")
-                        }),
-
-                    )
+                        .clickable { navController.navigate("profile") }
+                )
             }
 
             // URL Input
-            Surface(
-                border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TextField(
-                    value = url,
-                    onValueChange = { url = it },
-                    placeholder = {
-                        Text(
-                            text = "https://www.target.com/",
-                            color = Color.Gray,
-                            fontFamily = FontFamily(Font(R.font.poppins_regular))
-                            )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_search_24),
-                            contentDescription = null
-                        )
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.Transparent,
-                        cursorColor = MaterialTheme.colorScheme.primary,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    singleLine = true
-                )
-            }
+            InputField(
+                label = "Target URL",
+                value = targetUrl,
+                onValueChange = { targetUrl = it }
+            )
+
+            // Server IP Input
+            InputField(
+                label = "Server IP",
+                value = serverIp,
+                onValueChange = { serverIp = it }
+            )
 
             // Scanning Options Header
             Text(
@@ -171,63 +165,142 @@ fun HomeScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 optionsState.value.forEachIndexed { index, option ->
-                    Surface(
-                        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = option.first,
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontFamily = FontFamily(Font(R.font.poppins_regular))
-                            )
-                            Switch(
-                                checked = option.second,
-                                onCheckedChange = { checked ->
-                                    optionsState.value = optionsState.value.toMutableList().apply {
-                                        set(index, option.first to checked)
-                                    }
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                    uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
-                                    uncheckedTrackColor = MaterialTheme.colorScheme.secondary.copy(
-                                        alpha = 0.5f
-                                    )
-                                )
-                            )
+                    OptionSwitch(
+                        label = option.first,
+                        isChecked = option.second,
+                        onToggle = { checked ->
+                            optionsState.value = optionsState.value.toMutableList().apply {
+                                set(index, option.first to checked)
+                            }
                         }
-                    }
+                    )
                 }
             }
 
             // Scan Results Button
             Button(
-                onClick = { /* Handle scan results */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .align(Alignment.End)
-                    .clip(RoundedCornerShape(16.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                onClick = {
+                    if (targetUrl.isBlank() || serverIp.isBlank()) {
+                        Toast.makeText(
+                            activity,
+                            "Please enter both URL and Server IP",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@Button
+                    }
+
+//                    isLoading = true
+//                    errorMessage = null
+//                    scanResults = null
+
+                    val requestBody = mapOf(
+                        "target" to targetUrl,
+                        "os_enum" to optionsState.value.first { it.first == "OS Enumeration" }.second,
+                        "service_info" to optionsState.value.first { it.first == "Service Information" }.second,
+                        "subdomain_enum" to optionsState.value.first { it.first == "Subdomain Enumeration" }.second,
+                        "dns_enum" to optionsState.value.first { it.first == "DNS Enumeration" }.second,
+                        "active_scanning" to optionsState.value.first { it.first == "Email Footprinting" }.second,
+                        "network_footprinting" to optionsState.value.first { it.first == "Network Footprinting" }.second
+                    )
+                    scanResultsViewModel.fetchScanResults(requestBody)
+                },
+                modifier = Modifier.fillMaxWidth()
             ) {
+                Text("Scan Results")
+            }
+
+            // Loading State
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
+            }
+
+            // Display Scan Results
+            scanResults?.let { results ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "Scan Results:",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    item {
+                        Text(results.toString())
+                    }
+                }
+            }
+
+            // Error State
+            errorMessage?.let {
                 Text(
-                    text = "Scan Results",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    fontFamily = FontFamily(Font(R.font.poppins_regular))
+                    text = it,
+                    color = Color.Red,
+                    modifier = Modifier.padding(8.dp)
                 )
+                Button(onClick = {  scanResultsViewModel.fetchScanResults(mapOf()) }) {
+                    Text("Retry")
+                }
             }
         }
     }
 }
+
+@Composable
+fun InputField(label: String, value: String, onValueChange: (String) -> Unit) {
+    Surface(
+        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(text = label, color = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.colors(),
+            singleLine = true
+        )
+    }
+}
+
+@Composable
+fun OptionSwitch(label: String, isChecked: Boolean, onToggle: (Boolean) -> Unit) {
+    Surface(
+        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = label, fontSize = 16.sp)
+            Switch(
+                checked = isChecked,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                )
+            )
+        }
+    }
+}
+
+//@Preview
+//@Composable
+//private fun PreviewHomeScreen() {
+//    AWVS_AppTheme {
+//        HomeScreen(navController = rememberNavController())
+//    }
+//}
