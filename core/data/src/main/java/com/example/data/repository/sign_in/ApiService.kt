@@ -1,9 +1,7 @@
 package com.example.data.repository.sign_in
 
 import com.example.models.ScanResults
-import retrofit2.Call
 import retrofit2.http.Body
-import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface ApiService {

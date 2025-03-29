@@ -1,22 +1,13 @@
 package com.example.awvs_app.presentation.feature.navigation
 
-import android.widget.Toast
+//import com.example.awvs_app.presentation.feature.auth.SignInViewModel
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.awvs_app.presentation.feature.auth.SignInScreen
-//import com.example.awvs_app.presentation.feature.auth.SignInViewModel
-import com.example.awvs_app.presentation.feature.home.HomeScreen
-import com.example.awvs_app.presentation.feature.profile.ProfileScreen
-import com.example.data.repository.sign_in.GoogleAuthUiClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
 import com.example.awvs_app.ScanResultsViewModel
+import com.example.awvs_app.presentation.feature.auth.SignInScreen
+import com.example.awvs_app.presentation.feature.home.HomeScreen
 
 
 @Composable

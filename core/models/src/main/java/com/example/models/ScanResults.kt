@@ -1,7 +1,8 @@
 package com.example.models
 
-import com.google.gson.Gson
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ScanResults(
     val active_scanning: List<ActiveScanning>,
     val dns_enum: DnsEnum?,
@@ -10,6 +11,3 @@ data class ScanResults(
     val service_info: ServiceInfo?,
     val subdomain_enum: List<SubdomainEnum>?
 )
-
-val jsonString = """ YOUR_JSON_HERE """
-val scanResults = Gson().fromJson(jsonString, ScanResults::class.java)

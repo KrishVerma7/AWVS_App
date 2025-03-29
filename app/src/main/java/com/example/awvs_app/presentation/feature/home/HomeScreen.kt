@@ -13,27 +13,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -49,27 +42,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.awvs_app.R
 import com.example.awvs_app.ScanResultsViewModel
-import com.example.awvs_app.ui.theme.AWVS_AppTheme
 import com.example.data.repository.sign_in.RetrofitClient
-import com.example.models.ScanResults
-import kotlinx.coroutines.delay
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsViewModel) {
     val activity = LocalContext.current as? Activity ?: return
-    val apiService = RetrofitClient.apiService
+    val context = LocalContext.current
+    val retrofitClient = remember { RetrofitClient }
 
     BackHandler {
         activity?.finish()
@@ -84,7 +70,7 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
                 "Service Information" to true,
                 "Subdomain Enumeration" to true,
                 "DNS Enumeration" to true,
-                "Email Footprinting" to true,
+                "Active Scanning" to true,
                 "Network Footprinting" to true
             )
         )
@@ -95,7 +81,7 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
 //    var errorMessage by remember { mutableStateOf<String?>(null) }
 //    val scanResults by scanResultsViewModel.scanResults
 
-    val scanResults by scanResultsViewModel.scanResults
+//    val scanResults by scanResultsViewModel.scanResults
     val isLoading by scanResultsViewModel.isLoading
     val errorMessage by scanResultsViewModel.errorMessage
 
@@ -112,6 +98,8 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .padding(top = 50.dp, start = 16.dp, end = 16.dp),
+//                .verticalScroll(rememberScrollState()), // Add scrollable behavior ,
+
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -188,6 +176,11 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
                         ).show()
                         return@Button
                     }
+                    val formattedUrl = if (!serverIp.startsWith("http://") && !serverIp.startsWith("https://")) {
+                        "https://$serverIp"
+                    } else {
+                        serverIp
+                    }
 
 //                    isLoading = true
 //                    errorMessage = null
@@ -199,10 +192,11 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
                         "service_info" to optionsState.value.first { it.first == "Service Information" }.second,
                         "subdomain_enum" to optionsState.value.first { it.first == "Subdomain Enumeration" }.second,
                         "dns_enum" to optionsState.value.first { it.first == "DNS Enumeration" }.second,
-                        "active_scanning" to optionsState.value.first { it.first == "Email Footprinting" }.second,
+                        "active_scanning" to optionsState.value.first { it.first == "Active Scanning" }.second,
                         "network_footprinting" to optionsState.value.first { it.first == "Network Footprinting" }.second
                     )
-                    scanResultsViewModel.fetchScanResults(requestBody)
+                    val apiService = retrofitClient.createApiService(formattedUrl)
+                    scanResultsViewModel.fetchScanResults(apiService,requestBody,activity)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -215,36 +209,22 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
             }
 
             // Display Scan Results
-            scanResults?.let { results ->
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    item {
-                        Text(
-                            text = "Scan Results:",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    item {
-                        Text(results.toString())
-                    }
-                }
-            }
+//            scanResults?.let { results ->
+//                DisplayScanResults(results)
+//            }
+
 
             // Error State
-            errorMessage?.let {
-                Text(
-                    text = it,
-                    color = Color.Red,
-                    modifier = Modifier.padding(8.dp)
-                )
-                Button(onClick = {  scanResultsViewModel.fetchScanResults(mapOf()) }) {
-                    Text("Retry")
-                }
-            }
+//            errorMessage?.value?.let {
+//                Text(
+//                    text = it,
+//                    color = Color.Red,
+//                    modifier = Modifier.padding(8.dp)
+//                )
+//                Button(onClick = {  scanResultsViewModel.fetchScanResults(mapOf()) }) {
+//                    Text("Retry")
+//                }
+//            }
         }
     }
 }
@@ -263,7 +243,7 @@ fun InputField(label: String, value: String, onValueChange: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = TextFieldDefaults.colors(),
-            singleLine = true
+            singleLine = true,
         )
     }
 }
