@@ -107,18 +107,18 @@ fun SignInScreen(
                     modifier = Modifier.padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        painter = painterResource(id = com.google.android.gms.base.R.drawable.googleg_standard_color_18),
-                        contentDescription = "Google Icon",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.padding(4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
+//                    Icon(
+//                        painter = painterResource(id = com.google.android.gms.base.R.drawable.googleg_standard_color_18),
+//                        contentDescription = "Google Icon",
+//                        tint = Color.Unspecified,
+//                        modifier = Modifier.padding(4.dp)
+//                    )
+//
+//                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
 //                        text = "Sign in with Google",
-                        text = "Get Started",
+                        text = "  Get Started  ",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(4.dp)

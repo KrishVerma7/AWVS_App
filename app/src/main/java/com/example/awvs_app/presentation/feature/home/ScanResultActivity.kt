@@ -17,12 +17,16 @@ class ScanResultActivity : ComponentActivity() {
 
         val json = intent.getStringExtra("scanResults")
         val scanResults:ScanResults? = Gson().fromJson(json, ScanResults::class.java)
+        val targetUrl = intent.getStringExtra("targetUrl") ?: "N/A"
 
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     scanResults?.let {
-                        DisplayScanResults(it)
+                        DisplayScanResults(
+                            it,
+                            targetUrl = targetUrl
+                        )
                     } ?: Text("No Results Found", modifier = Modifier.padding(16.dp))
                 }
             }

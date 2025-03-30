@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +16,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,6 +33,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,20 +44,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.awvs_app.R
 import com.example.awvs_app.ScanResultsViewModel
+import com.example.awvs_app.ui.theme.AWVS_AppTheme
+import com.example.awvs_app.ui.theme.poppinsFontFamily
 import com.example.data.repository.sign_in.RetrofitClient
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsViewModel) {
+fun HomeScreen(navController: NavController, scanResultsViewModel: ScanResultsViewModel) {
     val activity = LocalContext.current as? Activity ?: return
     val context = LocalContext.current
     val retrofitClient = remember { RetrofitClient }
@@ -72,24 +82,19 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
                 "DNS Enumeration" to true,
                 "Active Scanning" to true,
                 "Network Footprinting" to true
-            )
+            ).map { it.first to it.second as Boolean? }
         )
     }
 
-//    var scanResults by remember { mutableStateOf<ScanResults?>(null) }
-//    var isLoading by remember { mutableStateOf(false) }
-//    var errorMessage by remember { mutableStateOf<String?>(null) }
-//    val scanResults by scanResultsViewModel.scanResults
-
-//    val scanResults by scanResultsViewModel.scanResults
     val isLoading by scanResultsViewModel.isLoading
-    val errorMessage by scanResultsViewModel.errorMessage
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().padding(vertical = 12.dp)) {
         Image(
             painter = painterResource(id = R.drawable.auth),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.2f),
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.15f),
             contentScale = ContentScale.Crop
         )
 
@@ -97,32 +102,30 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(top = 50.dp, start = 16.dp, end = 16.dp),
-//                .verticalScroll(rememberScrollState()), // Add scrollable behavior ,
-
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(top = 32.dp, start = 12.dp, end = 12.dp), // Slightly increased padding
+            verticalArrangement = Arrangement.spacedBy(16.dp), // Adjusted spacing
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top Bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_menu_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Icon(
-                    painter = painterResource(R.drawable.baseline_person_pin_24),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable { navController.navigate("profile") }
-                )
-            }
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Icon(
+//                    painter = painterResource(R.drawable.baseline_menu_24),
+//                    contentDescription = null,
+//                    modifier = Modifier.size(28.dp) // Slightly increased
+//                )
+//
+//                Icon(
+//                    painter = painterResource(R.drawable.baseline_person_pin_24),
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .size(28.dp)
+//                        .clickable { navController.navigate("profile") }
+//                )
+//            }
 
             // URL Input
             InputField(
@@ -141,21 +144,21 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
             // Scanning Options Header
             Text(
                 text = "Scanning Options",
-                fontSize = 20.sp,
+                fontSize = 18.sp, // Slightly reduced from 20.sp
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontFamily = FontFamily(Font(R.font.poppins_regular))
+                fontFamily = poppinsFontFamily
             )
 
-            // Scanning Options
-            Column(
+            // Scanning Options List
+            LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Balanced spacing
             ) {
-                optionsState.value.forEachIndexed { index, option ->
+                itemsIndexed(optionsState.value) { index, option ->
                     OptionSwitch(
                         label = option.first,
-                        isChecked = option.second,
+                        isChecked = option.second?:false,
                         onToggle = { checked ->
                             optionsState.value = optionsState.value.toMutableList().apply {
                                 set(index, option.first to checked)
@@ -163,68 +166,58 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
                         }
                     )
                 }
-            }
 
-            // Scan Results Button
-            Button(
-                onClick = {
-                    if (targetUrl.isBlank() || serverIp.isBlank()) {
-                        Toast.makeText(
-                            activity,
-                            "Please enter both URL and Server IP",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
+                item {
+                    // Scan Results Button
+                    Button(
+                        onClick = {
+                            if (targetUrl.isBlank() || serverIp.isBlank()) {
+                                Toast.makeText(
+                                    activity,
+                                    "Please enter both URL and Server IP",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            val formattedUrl =
+                                if (!serverIp.startsWith("http://") && !serverIp.startsWith("https://")) {
+                                    "https://$serverIp"
+                                } else {
+                                    serverIp
+                                }
+
+                            val requestBody: Map<String, Any?> = mapOf(
+                                "target" to targetUrl,
+                                "os_enum" to if (optionsState.value[0].second == true) true else null,
+                                "service_info" to if (optionsState.value[1].second == true) true else null,
+                                "subdomain_enum" to if (optionsState.value[2].second == true) true else null,
+                                "dns_enum" to if (optionsState.value[3].second == true) true else null,
+                                "active_scanning" to if (optionsState.value[4].second == true) true else null,
+                                "network_footprinting" to if (optionsState.value[5].second == true) true else null
+                            )
+
+                            val apiService = retrofitClient.createApiService(formattedUrl)
+                            scanResultsViewModel.fetchScanResults(apiService,
+                                requestBody as Map<String, @JvmSuppressWildcards Any?>, activity, targetUrl)
+
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent, // Transparent background
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface),
+                        shape = RoundedCornerShape(24.dp) // Reduced from 28.dp for better proportion
+                    ) {
+                        Text("Scan Results", fontFamily = poppinsFontFamily, fontSize = 14.sp) // Reduced slightly
                     }
-                    val formattedUrl = if (!serverIp.startsWith("http://") && !serverIp.startsWith("https://")) {
-                        "https://$serverIp"
-                    } else {
-                        serverIp
-                    }
-
-//                    isLoading = true
-//                    errorMessage = null
-//                    scanResults = null
-
-                    val requestBody = mapOf(
-                        "target" to targetUrl,
-                        "os_enum" to optionsState.value.first { it.first == "OS Enumeration" }.second,
-                        "service_info" to optionsState.value.first { it.first == "Service Information" }.second,
-                        "subdomain_enum" to optionsState.value.first { it.first == "Subdomain Enumeration" }.second,
-                        "dns_enum" to optionsState.value.first { it.first == "DNS Enumeration" }.second,
-                        "active_scanning" to optionsState.value.first { it.first == "Active Scanning" }.second,
-                        "network_footprinting" to optionsState.value.first { it.first == "Network Footprinting" }.second
-                    )
-                    val apiService = retrofitClient.createApiService(formattedUrl)
-                    scanResultsViewModel.fetchScanResults(apiService,requestBody,activity)
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Scan Results")
+                }
             }
 
             // Loading State
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
+                CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp)) // Adjusted padding
             }
-
-            // Display Scan Results
-//            scanResults?.let { results ->
-//                DisplayScanResults(results)
-//            }
-
-
-            // Error State
-//            errorMessage?.value?.let {
-//                Text(
-//                    text = it,
-//                    color = Color.Red,
-//                    modifier = Modifier.padding(8.dp)
-//                )
-//                Button(onClick = {  scanResultsViewModel.fetchScanResults(mapOf()) }) {
-//                    Text("Retry")
-//                }
-//            }
         }
     }
 }
@@ -232,55 +225,71 @@ fun HomeScreen(navController: NavController,scanResultsViewModel: ScanResultsVie
 @Composable
 fun InputField(label: String, value: String, onValueChange: (String) -> Unit) {
     Surface(
-        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(0.5.dp, Color.Gray.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         TextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = { Text(text = label, color = Color.Gray) },
+            placeholder = {
+                Text(
+                    text = label,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    fontFamily = FontFamily(Font(R.font.poppins_regular))
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = TextFieldDefaults.colors(),
             singleLine = true,
+            textStyle = TextStyle(fontSize = 14.sp)
         )
     }
 }
 
 @Composable
-fun OptionSwitch(label: String, isChecked: Boolean, onToggle: (Boolean) -> Unit) {
+fun OptionSwitch(label: String, isChecked: Boolean, onToggle: (Boolean?) -> Unit) {
     Surface(
-        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(0.5.dp, Color.Gray.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 12.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, fontSize = 16.sp)
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontFamily = FontFamily(Font(R.font.poppins_regular))
+            )
             Switch(
-                checked = isChecked,
-                onCheckedChange = onToggle,
+                checked = isChecked ?: false, // Ensure checked is always Boolean
+                onCheckedChange = { checked -> onToggle(if (checked) true else null) },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    checkedThumbColor = Color.Green,
+                    checkedTrackColor = Color.Green.copy(alpha = 0.2f),
                     uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
                     uncheckedTrackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                )
+                ),
+                modifier = Modifier.size(20.dp).padding(end = 16.dp)
             )
         }
     }
 }
 
-//@Preview
-//@Composable
-//private fun PreviewHomeScreen() {
-//    AWVS_AppTheme {
-//        HomeScreen(navController = rememberNavController())
-//    }
-//}
+@Preview(showBackground = true)
+@Composable
+fun PreviewHomeScreen() {
+    AWVS_AppTheme {
+        HomeScreen(
+            navController = rememberNavController(),
+            scanResultsViewModel = ScanResultsViewModel()
+        )
+    }
+}

@@ -25,11 +25,11 @@ class ScanResultsViewModel : ViewModel() {
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
 
-    fun fetchScanResults(apiService: ApiService, requestBody: Map<String, @JvmSuppressWildcards Any>, activity: Activity) {
+    fun fetchScanResults(apiService: ApiService, requestBody: Map<String, @JvmSuppressWildcards Any?>, activity: Activity,targetUrl:String) {
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val result = apiService.getScanResults(requestBody)
+                val result = apiService.getScanResults(requestBody as Map<String, @JvmSuppressWildcards Any>)
 //                val parsedResult = parseScanResults(result.toString())
 //                _scanResults.value = parsedResult
                 _scanResults.value = result
@@ -40,6 +40,7 @@ class ScanResultsViewModel : ViewModel() {
                 val intent = Intent(activity, ScanResultActivity::class.java).apply {
 //                    putExtra("scanResults", Json.encodeToString(parsedResult))
                     putExtra("scanResults", Gson().toJson(result))
+                    putExtra("targetUrl", targetUrl)
                 }
                 activity.startActivity(intent)
 
